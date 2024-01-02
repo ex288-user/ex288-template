@@ -16,50 +16,23 @@ metadata:
     iconClass: icon-php
     openshift.io/display-name: CakePHP + MySQL (Ephemeral)
     openshift.io/documentation-url: https://github.com/sclorg/cakephp-ex
-    openshift.io/long-description: This template defines resources needed to develop a CakePHP application, including a build configuration, application deployment configuration, and database deployment configuration.  The database is stored in non-persistent storage, so this configuration should be used for experimental purposes only.
+    openshift.io/long-description: This template defines resources needed to develop
+      a CakePHP application, including a build configuration, application deployment
+      configuration, and database deployment configuration.  The database is stored
+      in non-persistent storage, so this configuration should be used for experimental
+      purposes only.
     openshift.io/provider-display-name: Red Hat, Inc.
     openshift.io/support-url: https://access.redhat.com
-    samples.operator.openshift.io/version: 4.6.52
+    samples.operator.openshift.io/version: 4.10.14
     tags: quickstart,php,cakephp
     template.openshift.io/bindable: "false"
-  creationTimestamp: "2022-03-12T05:35:18Z"
+  creationTimestamp: "2022-08-24T22:36:48Z"
   labels:
     samples.operator.openshift.io/managed: "true"
-  managedFields:
-  - apiVersion: template.openshift.io/v1
-    fieldsType: FieldsV1
-    fieldsV1:
-      f:labels:
-        .: {}
-        f:app: {}
-        f:template: {}
-      f:message: {}
-      f:metadata:
-        f:annotations:
-          .: {}
-          f:description: {}
-          f:iconClass: {}
-          f:openshift.io/display-name: {}
-          f:openshift.io/documentation-url: {}
-          f:openshift.io/long-description: {}
-          f:openshift.io/provider-display-name: {}
-          f:openshift.io/support-url: {}
-          f:samples.operator.openshift.io/version: {}
-          f:tags: {}
-          f:template.openshift.io/bindable: {}
-        f:labels:
-          .: {}
-          f:samples.operator.openshift.io/managed: {}
-      f:objects: {}
-      f:parameters: {}
-    manager: cluster-samples-operator
-    operation: Update
-    time: "2022-03-12T05:35:18Z"
   name: cakephp-mysql-example
   namespace: openshift
-  resourceVersion: "17056"
-  selfLink: /apis/template.openshift.io/v1/namespaces/openshift/templates/cakephp-mysql-example
-  uid: ce010757-ee37-41f2-bc04-f0d6db467810
+  resourceVersion: "26175"
+  uid: 6c66289f-734b-48aa-a375-f2116e23bd86
 objects:
 - apiVersion: v1
   kind: Secret
@@ -75,7 +48,8 @@ objects:
   metadata:
     annotations:
       description: Exposes and load balances the application pods
-      service.alpha.openshift.io/dependencies: '[{"name": "${DATABASE_SERVICE_NAME}", "kind": "Service"}]'
+      service.alpha.openshift.io/dependencies: '[{"name": "${DATABASE_SERVICE_NAME}",
+        "kind": "Service"}]'
     name: ${NAME}
   spec:
     ports:
@@ -84,7 +58,7 @@ objects:
       targetPort: 8080
     selector:
       name: ${NAME}
-- apiVersion: v1
+- apiVersion: route.openshift.io/v1
   kind: Route
   metadata:
     name: ${NAME}
@@ -93,13 +67,13 @@ objects:
     to:
       kind: Service
       name: ${NAME}
-- apiVersion: v1
+- apiVersion: image.openshift.io/v1
   kind: ImageStream
   metadata:
     annotations:
       description: Keeps track of changes in the application image
     name: ${NAME}
-- apiVersion: v1
+- apiVersion: build.openshift.io/v1
   kind: BuildConfig
   metadata:
     annotations:
@@ -135,7 +109,7 @@ objects:
     - github:
         secret: ${GITHUB_WEBHOOK_SECRET}
       type: GitHub
-- apiVersion: v1
+- apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
     annotations:
@@ -235,7 +209,7 @@ objects:
       targetPort: 3306
     selector:
       name: ${DATABASE_SERVICE_NAME}
-- apiVersion: v1
+- apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
     annotations:
@@ -285,7 +259,8 @@ objects:
               - /bin/sh
               - -i
               - -c
-              - MYSQL_PWD='${DATABASE_PASSWORD}' mysql -h 127.0.0.1 -u ${DATABASE_USER} -D ${DATABASE_NAME} -e 'SELECT 1'
+              - MYSQL_PWD='${DATABASE_PASSWORD}' mysql -h 127.0.0.1 -u ${DATABASE_USER}
+                -D ${DATABASE_NAME} -e 'SELECT 1'
             initialDelaySeconds: 5
             timeoutSeconds: 1
           resources:
@@ -304,7 +279,7 @@ objects:
         - mysql
         from:
           kind: ImageStreamTag
-          name: mysql:8.0-el8
+          name: mysql:${MYSQL_VERSION}
           namespace: ${NAMESPACE}
       type: ImageChange
     - type: ConfigChange
@@ -319,11 +294,16 @@ parameters:
   name: NAMESPACE
   required: true
   value: openshift
-- description: Version of PHP image to be used (7.3-ubi7, 7.3-ubi8, or latest).
+- description: Version of PHP image to be used (7.3-ubi7, 7.4-ubi8, or latest).
   displayName: PHP Version
   name: PHP_VERSION
   required: true
-  value: 7.3-ubi8
+  value: 7.4-ubi8
+- description: Version of MySQL image to be used (8.0-el8 or latest).
+  displayName: MySQL Version
+  name: MYSQL_VERSION
+  required: true
+  value: 8.0-el8
 - description: Maximum amount of memory the CakePHP container can use.
   displayName: Memory Limit
   name: MEMORY_LIMIT
@@ -339,16 +319,20 @@ parameters:
   name: SOURCE_REPOSITORY_URL
   required: true
   value: https://github.com/sclorg/cakephp-ex.git
-- description: Set this to a branch name, tag or other ref of your repository if you are not using the default branch.
+- description: Set this to a branch name, tag or other ref of your repository if you
+    are not using the default branch.
   displayName: Git Reference
   name: SOURCE_REPOSITORY_REF
-- description: Set this to the relative path to your project if it is not in the root of your repository.
+- description: Set this to the relative path to your project if it is not in the root
+    of your repository.
   displayName: Context Directory
   name: CONTEXT_DIR
-- description: The exposed hostname that will route to the CakePHP service, if left blank a value will be defaulted.
+- description: The exposed hostname that will route to the CakePHP service, if left
+    blank a value will be defaulted.
   displayName: Application Hostname
   name: APPLICATION_DOMAIN
-- description: Github trigger secret.  A difficult to guess string encoded as part of the webhook URL.  Not encrypted.
+- description: Github trigger secret.  A difficult to guess string encoded as part
+    of the webhook URL.  Not encrypted.
   displayName: GitHub Webhook Secret
   from: '[a-zA-Z0-9]{40}'
   generate: expression
@@ -384,14 +368,16 @@ parameters:
   from: '[a-zA-Z0-9]{40}'
   generate: expression
   name: CAKEPHP_SECURITY_SALT
-- description: How often to check script timestamps for updates, in seconds. 0 will result in OPcache checking for updates on every request.
+- description: How often to check script timestamps for updates, in seconds. 0 will
+    result in OPcache checking for updates on every request.
   displayName: OPcache Revalidation Frequency
   name: OPCACHE_REVALIDATE_FREQ
   value: "2"
 - description: The custom Composer mirror URL
   displayName: Custom Composer Mirror URL
   name: COMPOSER_MIRROR
-- description: 'The custom MySQL default authentication plugin (default: mysql_native_password), might be changed to caching_sha2_password once PHP client supports it.'
+- description: 'The custom MySQL default authentication plugin (default: mysql_native_password),
+    might be changed to caching_sha2_password once PHP client supports it.'
   displayName: MySQL authentication plugin
   name: MYSQL_DEFAULT_AUTHENTICATION_PLUGIN
   value: mysql_native_password
